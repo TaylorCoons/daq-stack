@@ -43,8 +43,7 @@ func PostAuth(ctx context.Context, w http.ResponseWriter, r *http.Request, p ser
 		handleAuthError(w, r, err)
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(token)
+	writeJson(w, token)
 }
 
 func PutAuth(ctx context.Context, w http.ResponseWriter, r *http.Request, p server.PathParams) {
@@ -60,8 +59,7 @@ func PutAuth(ctx context.Context, w http.ResponseWriter, r *http.Request, p serv
 		handleAuthError(w, r, err)
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(newToken)
+	writeJson(w, newToken)
 }
 
 func DeleteAuth(ctx context.Context, w http.ResponseWriter, r *http.Request, p server.PathParams) {
@@ -79,6 +77,5 @@ func DeleteAuth(ctx context.Context, w http.ResponseWriter, r *http.Request, p s
 }
 
 func GetAuth(ctx context.Context, w http.ResponseWriter, r *http.Request, p server.PathParams) {
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(auth.SupportedAuthTypes())
+	writeJson(w, auth.SupportedAuthTypes())
 }
