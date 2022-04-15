@@ -13,13 +13,30 @@ import (
 )
 
 func handleAuthError(w http.ResponseWriter, r *http.Request, err error) {
-	if e, ok := (err).(*auth.NotAuthorized); ok {
+	if e, ok := (err).(*NotAuthorized); ok {
 		writeError(w, r, e, http.StatusUnauthorized)
 	} else if e, ok := (err).(*MalformedBasicAuth); ok {
+		writeError(w, r, e, http.StatusUnauthorized)
+	} else if e, ok := (err).(auth.TokenNotAuthorized); ok {
 		writeError(w, r, e, http.StatusUnauthorized)
 	} else {
 		panic(err)
 	}
+}
+
+func IsAdminBasicAuthorized(f server.HandlerFunc) server.HandlerFunc {
+	return server.HandlerFunc(func(ctx context.Context, w http.ResponseWriter, r *http.Request, p server.PathParams) {
+		username, password, ok := r.BasicAuth()
+		if !ok {
+			handleAuthError(w, r, &MalformedBasicAuth{})
+			return
+		}
+		if !auth.BasicAuth(username, password) {
+			handleAuthError(w, r, &NotAuthorized{})
+			return
+		}
+		f(ctx, w, r, p)
+	})
 }
 
 func DevTest(ctx context.Context, w http.ResponseWriter, r *http.Request, p server.PathParams) {
@@ -33,12 +50,7 @@ func DevTest(ctx context.Context, w http.ResponseWriter, r *http.Request, p serv
 
 func PostAuth(ctx context.Context, w http.ResponseWriter, r *http.Request, p server.PathParams) {
 	c := connector.Get()
-	username, password, ok := r.BasicAuth()
-	if !ok {
-		handleAuthError(w, r, &MalformedBasicAuth{})
-		return
-	}
-	token, err := auth.CreateToken(c, username, password)
+	token, err := auth.CreateToken(c)
 	if err != nil {
 		handleAuthError(w, r, err)
 		return
@@ -64,12 +76,7 @@ func PutAuth(ctx context.Context, w http.ResponseWriter, r *http.Request, p serv
 
 func DeleteAuth(ctx context.Context, w http.ResponseWriter, r *http.Request, p server.PathParams) {
 	c := connector.Get()
-	username, password, ok := r.BasicAuth()
-	if !ok {
-		handleAuthError(w, r, &MalformedBasicAuth{})
-		return
-	}
-	err := auth.RevokeToken(c, username, password)
+	err := auth.RevokeToken(c)
 	if err != nil {
 		handleAuthError(w, r, err)
 		return

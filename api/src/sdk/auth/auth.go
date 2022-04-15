@@ -35,14 +35,11 @@ func IndexTables(client *mongo.Client) {
 	}
 }
 
-func basicAuth(username string, password string) bool {
+func BasicAuth(username string, password string) bool {
 	return (masterUser == username && masterPass == password)
 }
 
-func CreateToken(client *mongo.Client, username string, password string) (models.Token, error) {
-	if !basicAuth(username, password) {
-		return models.Token{}, &NotAuthorized{}
-	}
+func CreateToken(client *mongo.Client) (models.Token, error) {
 	// TODO: Hash token and store into DB
 	collection := client.Database(database).Collection(collection)
 	token, err := GenerateToken(tokenSize)
@@ -56,7 +53,7 @@ func CreateToken(client *mongo.Client, username string, password string) (models
 
 func RenewToken(client *mongo.Client, token models.Token) (models.Token, error) {
 	if ValidateToken(client, token) {
-		return models.Token{}, &NotAuthorized{}
+		return models.Token{}, &TokenNotAuthorized{}
 	}
 	// Delete token
 	collection := client.Database(database).Collection(collection)
@@ -75,10 +72,7 @@ func ValidateToken(client *mongo.Client, token models.Token) bool {
 	return res != nil
 }
 
-func RevokeToken(client *mongo.Client, username string, password string) error {
-	if !basicAuth(username, password) {
-		return &NotAuthorized{}
-	}
+func RevokeToken(client *mongo.Client) error {
 	// TODO: Remove hashed token from DB
 	collection := client.Database(database).Collection(collection)
 	collection.DeleteMany(helpers.TimeoutCtx(10), bson.D{})

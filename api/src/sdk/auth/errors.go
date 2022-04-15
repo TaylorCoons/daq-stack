@@ -1,7 +1,7 @@
 package auth
 
-type NotAuthorized struct{}
+type TokenNotAuthorized struct{}
 
-func (NotAuthorized) Error() string {
-	return "basic authorization failed"
+func (TokenNotAuthorized) Error() string {
+	return "not authorized: token not valid"
 }

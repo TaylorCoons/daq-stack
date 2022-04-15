@@ -13,11 +13,11 @@ var incorrectUser string = "incorrect"
 var incorrectPass string = "incorrect"
 
 func TestBasicAuth(t *testing.T) {
-	if basicAuth(correctUser, correctPass) != true {
+	if BasicAuth(correctUser, correctPass) != true {
 		t.Error("admin auth did not authenticate actual value")
 	}
 
-	if basicAuth(incorrectUser, incorrectPass) == true {
+	if BasicAuth(incorrectUser, incorrectPass) == true {
 		t.Error("admin auth authenticated incorrect value")
 	}
 }
