@@ -60,7 +60,7 @@ func DevTest(ctx context.Context, w http.ResponseWriter, r *http.Request, p serv
 	fmt.Println(r.Header.Get("x-api-key"))
 }
 
-func PostAuth(ctx context.Context, w http.ResponseWriter, r *http.Request, p server.PathParams) {
+func PostAuthLogin(ctx context.Context, w http.ResponseWriter, r *http.Request, p server.PathParams) {
 	c := connector.Get()
 	token, err := auth.CreateToken(c)
 	if err != nil {
@@ -70,7 +70,7 @@ func PostAuth(ctx context.Context, w http.ResponseWriter, r *http.Request, p ser
 	writeJson(w, token)
 }
 
-func PutAuth(ctx context.Context, w http.ResponseWriter, r *http.Request, p server.PathParams) {
+func PutAuthRenew(ctx context.Context, w http.ResponseWriter, r *http.Request, p server.PathParams) {
 	c := connector.Get()
 	newToken, err := auth.RenewToken(c, r.Header.Get("x-api-key"))
 	if err != nil {
@@ -80,7 +80,7 @@ func PutAuth(ctx context.Context, w http.ResponseWriter, r *http.Request, p serv
 	writeJson(w, newToken)
 }
 
-func DeleteAuth(ctx context.Context, w http.ResponseWriter, r *http.Request, p server.PathParams) {
+func DeleteAuthRelease(ctx context.Context, w http.ResponseWriter, r *http.Request, p server.PathParams) {
 	c := connector.Get()
 	err := auth.RevokeToken(c, r.Header.Get("x-api-key"))
 	if err != nil {
@@ -89,7 +89,7 @@ func DeleteAuth(ctx context.Context, w http.ResponseWriter, r *http.Request, p s
 	}
 }
 
-func DeleteRevokeAll(ctx context.Context, w http.ResponseWriter, r *http.Request, p server.PathParams) {
+func DeleteAuthRevoke(ctx context.Context, w http.ResponseWriter, r *http.Request, p server.PathParams) {
 	c := connector.Get()
 	err := auth.RevokeAll(c)
 	if err != nil {

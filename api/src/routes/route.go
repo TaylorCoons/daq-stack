@@ -9,10 +9,10 @@ var Routes []server.Route = []server.Route{
 	{Method: "GET", Path: "/health", Handler: handlers.GetHealth},
 
 	{Method: "GET", Path: "/auth", Handler: handlers.GetAuth},
-	{Method: "POST", Path: "/auth", Handler: handlers.IsAdminBasicAuthorized(handlers.PostAuth)},
-	{Method: "PUT", Path: "/auth", Handler: handlers.IsAdminTokenAuthorized(handlers.PutAuth)},
-	{Method: "DELETE", Path: "/auth", Handler: handlers.IsAdminTokenAuthorized(handlers.DeleteAuth)},
-	{Method: "DELETE", Path: "/auth/all", Handler: handlers.IsAdminBasicAuthorized(handlers.DeleteRevokeAll)},
+	{Method: "POST", Path: "/auth/login", Handler: handlers.IsAdminBasicAuthorized(handlers.PostAuthLogin)},
+	{Method: "PUT", Path: "/auth/renew", Handler: handlers.IsAdminTokenAuthorized(handlers.PutAuthRenew)},
+	{Method: "DELETE", Path: "/auth/release", Handler: handlers.IsAdminTokenAuthorized(handlers.DeleteAuthRelease)},
+	{Method: "DELETE", Path: "/auth/revoke", Handler: handlers.IsAdminBasicAuthorized(handlers.DeleteAuthRevoke)},
 
 	{Method: "POST", Path: "/devtest", Handler: handlers.DevTest},
 }
