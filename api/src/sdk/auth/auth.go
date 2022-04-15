@@ -25,7 +25,7 @@ var collection = "adminTokens"
 
 func IndexTables(client *mongo.Client) {
 	collection := client.Database(database).Collection(collection)
-	time.Now().UTC()
+
 	index := mongo.IndexModel{
 		Keys:    bsonx.Doc{{Key: "createdAt", Value: bsonx.Int32(1)}},
 		Options: options.Index().SetExpireAfterSeconds(expirySeconds).SetName("expiration"),
@@ -56,6 +56,27 @@ func CreateToken(client *mongo.Client, encode string) (models.Token, error) {
 	return token, nil
 }
 
+func RenewToken(client *mongo.Client, token models.Token) (models.Token, error) {
+	if ValidateToken(client, token) {
+		return models.Token{}, &NotAuthorized{}
+	}
+	// Delete token
+	collection := client.Database(database).Collection(collection)
+	collection.DeleteMany(helpers.TimeoutCtx(10), bson.M{"key": token.Key})
+	newToken, err := GenerateToken(tokenSize)
+	if err != nil {
+		return models.Token{}, err
+	}
+	collection.InsertOne(helpers.TimeoutCtx(10), newToken)
+	return newToken, nil
+}
+
+func ValidateToken(client *mongo.Client, token models.Token) bool {
+	collection := client.Database(database).Collection(collection)
+	res := collection.FindOne(helpers.TimeoutCtx(10), bson.M{"key": token.Key}).Decode(&models.Token{})
+	return res != nil
+}
+
 func RevokeToken(client *mongo.Client, encode string) error {
 	if !basicAuth(encode) {
 		return &NotAuthorized{}
@@ -72,14 +93,26 @@ func SupportedAuthTypes() models.SupportedAuth {
 	}
 }
 
-func GenerateToken(length int) (models.Token, error) {
+func generateKey(length int) (string, error) {
 	b := make([]byte, length)
 	if _, err := rand.Read(b); err != nil {
-		return models.Token{}, err
+		return "", err
 	}
+	return base64.URLEncoding.EncodeToString(b), nil
+}
+
+func wrapToken(key string) models.Token {
 	return models.Token{
-		Token:     base64.URLEncoding.EncodeToString(b),
+		Key:       key,
 		CreatedAt: time.Now().UTC(),
 		ExpiresOn: time.Now().Add(time.Second * time.Duration(expirySeconds)).UTC(),
-	}, nil
+	}
+}
+
+func GenerateToken(length int) (models.Token, error) {
+	key, err := generateKey(length)
+	if err != nil {
+		return models.Token{}, err
+	}
+	return wrapToken(key), nil
 }

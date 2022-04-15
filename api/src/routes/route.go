@@ -8,7 +8,8 @@ import (
 var Routes []server.Route = []server.Route{
 	{Method: "GET", Path: "/health", Handler: handlers.GetHealth},
 
-	{Method: "POST", Path: "/auth", Handler: handlers.PostAuth},
 	{Method: "GET", Path: "/auth", Handler: handlers.GetAuth},
+	{Method: "POST", Path: "/auth", Handler: handlers.PostAuth},
+	{Method: "PUT", Path: "/auth", Handler: handlers.PutAuth},
 	{Method: "DELETE", Path: "/auth", Handler: handlers.DeleteAuth},
 }

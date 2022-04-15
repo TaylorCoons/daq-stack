@@ -31,7 +31,7 @@ func TestGenerateToken(t *testing.T) {
 	if err != nil {
 		t.Error("generate token returned an error")
 	}
-	decoded, err := base64.URLEncoding.DecodeString(res.Token)
+	decoded, err := base64.URLEncoding.DecodeString(res.Key)
 	if err != nil {
 		t.Error("generate token returned non url encoded string")
 	}
