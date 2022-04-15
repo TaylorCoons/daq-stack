@@ -11,7 +11,8 @@ var Routes []server.Route = []server.Route{
 	{Method: "GET", Path: "/auth", Handler: handlers.GetAuth},
 	{Method: "POST", Path: "/auth", Handler: handlers.IsAdminBasicAuthorized(handlers.PostAuth)},
 	{Method: "PUT", Path: "/auth", Handler: handlers.IsAdminTokenAuthorized(handlers.PutAuth)},
-	{Method: "DELETE", Path: "/auth", Handler: handlers.IsAdminBasicAuthorized(handlers.DeleteAuth)},
+	{Method: "DELETE", Path: "/auth", Handler: handlers.IsAdminTokenAuthorized(handlers.DeleteAuth)},
+	{Method: "DELETE", Path: "/auth/all", Handler: handlers.IsAdminBasicAuthorized(handlers.DeleteRevokeAll)},
 
 	{Method: "POST", Path: "/devtest", Handler: handlers.DevTest},
 }

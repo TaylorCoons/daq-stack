@@ -52,7 +52,6 @@ func CreateToken(client *mongo.Client) (models.Token, error) {
 }
 
 func RenewToken(client *mongo.Client, key string) (models.Token, error) {
-	// Delete token
 	collection := client.Database(database).Collection(collection)
 	collection.DeleteOne(utils.TimeoutCtx(10), bson.M{"key": key})
 	newToken, err := CreateToken(client)
@@ -68,10 +67,15 @@ func ValidateToken(client *mongo.Client, key string) bool {
 	return err == nil
 }
 
-func RevokeToken(client *mongo.Client) error {
-	// TODO: Remove hashed token from DB
+func RevokeToken(client *mongo.Client, key string) error {
 	collection := client.Database(database).Collection(collection)
-	collection.DeleteMany(utils.TimeoutCtx(10), bson.D{})
+	collection.DeleteOne(utils.TimeoutCtx(10), bson.M{"key": key})
+	return nil
+}
+
+func RevokeAll(client *mongo.Client) error {
+	collection := client.Database(database).Collection(collection)
+	collection.DeleteMany(utils.TimeoutCtx(10), bson.M{})
 	return nil
 }
 

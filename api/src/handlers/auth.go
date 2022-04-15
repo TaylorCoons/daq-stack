@@ -82,7 +82,16 @@ func PutAuth(ctx context.Context, w http.ResponseWriter, r *http.Request, p serv
 
 func DeleteAuth(ctx context.Context, w http.ResponseWriter, r *http.Request, p server.PathParams) {
 	c := connector.Get()
-	err := auth.RevokeToken(c)
+	err := auth.RevokeToken(c, r.Header.Get("x-api-key"))
+	if err != nil {
+		handleAuthError(w, r, err)
+		return
+	}
+}
+
+func DeleteRevokeAll(ctx context.Context, w http.ResponseWriter, r *http.Request, p server.PathParams) {
+	c := connector.Get()
+	err := auth.RevokeAll(c)
 	if err != nil {
 		handleAuthError(w, r, err)
 		return
