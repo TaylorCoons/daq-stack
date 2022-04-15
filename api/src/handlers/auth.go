@@ -12,13 +12,21 @@ import (
 	server "github.com/TaylorCoons/gorouter"
 )
 
-// TODO: REMOVE ME:
-var encode string = "YWRtaW46cGFzcw=="
+func DevTest(ctx context.Context, w http.ResponseWriter, r *http.Request, p server.PathParams) {
+	username, password, ok := r.BasicAuth()
+	if !ok {
+		panic(fmt.Errorf("invalid basic auth parameter"))
+	}
+	fmt.Printf("%s, %s", username, password)
+}
 
 func PostAuth(ctx context.Context, w http.ResponseWriter, r *http.Request, p server.PathParams) {
 	c := connector.Get()
-	//YWRtaW46cGFzcw==
-	token, err := auth.CreateToken(c, encode)
+	username, password, ok := r.BasicAuth()
+	if !ok {
+		panic(fmt.Errorf("invalid basic auth parameter"))
+	}
+	token, err := auth.CreateToken(c, username, password)
 	if err != nil {
 		panic(err)
 	}
@@ -44,7 +52,11 @@ func PutAuth(ctx context.Context, w http.ResponseWriter, r *http.Request, p serv
 
 func DeleteAuth(ctx context.Context, w http.ResponseWriter, r *http.Request, p server.PathParams) {
 	c := connector.Get()
-	err := auth.RevokeToken(c, encode)
+	username, password, ok := r.BasicAuth()
+	if !ok {
+		panic(fmt.Errorf("invalid basic auth parameter"))
+	}
+	err := auth.RevokeToken(c, username, password)
 	if err != nil {
 		panic(err)
 	}

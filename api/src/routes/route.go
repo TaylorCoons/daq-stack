@@ -12,4 +12,6 @@ var Routes []server.Route = []server.Route{
 	{Method: "POST", Path: "/auth", Handler: handlers.PostAuth},
 	{Method: "PUT", Path: "/auth", Handler: handlers.PutAuth},
 	{Method: "DELETE", Path: "/auth", Handler: handlers.DeleteAuth},
+
+	{Method: "POST", Path: "/devtest", Handler: handlers.DevTest},
 }

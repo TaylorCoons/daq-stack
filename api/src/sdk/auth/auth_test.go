@@ -2,7 +2,6 @@ package auth
 
 import (
 	"encoding/base64"
-	"fmt"
 	"testing"
 )
 
@@ -14,13 +13,11 @@ var incorrectUser string = "incorrect"
 var incorrectPass string = "incorrect"
 
 func TestBasicAuth(t *testing.T) {
-	value := EncodeBasicAuth(correctUser, correctPass)
-	if basicAuth(value) != true {
+	if basicAuth(correctUser, correctPass) != true {
 		t.Error("admin auth did not authenticate actual value")
 	}
 
-	value = EncodeBasicAuth(incorrectUser, incorrectPass)
-	if basicAuth(value) == true {
+	if basicAuth(incorrectUser, incorrectPass) == true {
 		t.Error("admin auth authenticated incorrect value")
 	}
 }
@@ -113,7 +110,3 @@ func TestGenerateToken(t *testing.T) {
 // 	}
 // 	// TODO: Test token is removed from DB
 // }
-
-func EncodeBasicAuth(user string, pass string) string {
-	return base64.URLEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", user, pass)))
-}

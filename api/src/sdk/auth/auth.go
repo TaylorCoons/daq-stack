@@ -3,7 +3,6 @@ package auth
 import (
 	"crypto/rand"
 	"encoding/base64"
-	"fmt"
 	"time"
 
 	"github.com/TaylorCoons/daq-stack/src/helpers"
@@ -15,8 +14,8 @@ import (
 )
 
 // TODO: move these into config
-var username string = "admin"
-var password string = "pass"
+var masterUser string = "admin"
+var masterPass string = "pass"
 var tokenSize int = 32
 var expirySeconds int32 = 60 * 60
 
@@ -36,13 +35,12 @@ func IndexTables(client *mongo.Client) {
 	}
 }
 
-func basicAuth(encode string) bool {
-	expected := base64.URLEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", username, password)))
-	return encode == expected
+func basicAuth(username string, password string) bool {
+	return (masterUser == username && masterPass == password)
 }
 
-func CreateToken(client *mongo.Client, encode string) (models.Token, error) {
-	if !basicAuth(encode) {
+func CreateToken(client *mongo.Client, username string, password string) (models.Token, error) {
+	if !basicAuth(username, password) {
 		return models.Token{}, &NotAuthorized{}
 	}
 	// TODO: Hash token and store into DB
@@ -77,8 +75,8 @@ func ValidateToken(client *mongo.Client, token models.Token) bool {
 	return res != nil
 }
 
-func RevokeToken(client *mongo.Client, encode string) error {
-	if !basicAuth(encode) {
+func RevokeToken(client *mongo.Client, username string, password string) error {
+	if !basicAuth(username, password) {
 		return &NotAuthorized{}
 	}
 	// TODO: Remove hashed token from DB
