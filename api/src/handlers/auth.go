@@ -2,12 +2,10 @@ package handlers
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 
 	"github.com/TaylorCoons/daq-stack/src/connector"
-	"github.com/TaylorCoons/daq-stack/src/models"
 	"github.com/TaylorCoons/daq-stack/src/sdk/auth"
 	server "github.com/TaylorCoons/gorouter"
 )
@@ -17,7 +15,9 @@ func handleAuthError(w http.ResponseWriter, r *http.Request, err error) {
 		writeError(w, r, e, http.StatusUnauthorized)
 	} else if e, ok := (err).(*MalformedBasicAuth); ok {
 		writeError(w, r, e, http.StatusUnauthorized)
-	} else if e, ok := (err).(auth.TokenNotAuthorized); ok {
+	} else if e, ok := (err).(*TokenNotAuthorized); ok {
+		writeError(w, r, e, http.StatusUnauthorized)
+	} else if e, ok := (err).(*NoApiKeyProvided); ok {
 		writeError(w, r, e, http.StatusUnauthorized)
 	} else {
 		panic(err)
@@ -25,7 +25,7 @@ func handleAuthError(w http.ResponseWriter, r *http.Request, err error) {
 }
 
 func IsAdminBasicAuthorized(f server.HandlerFunc) server.HandlerFunc {
-	return server.HandlerFunc(func(ctx context.Context, w http.ResponseWriter, r *http.Request, p server.PathParams) {
+	return func(ctx context.Context, w http.ResponseWriter, r *http.Request, p server.PathParams) {
 		username, password, ok := r.BasicAuth()
 		if !ok {
 			handleAuthError(w, r, &MalformedBasicAuth{})
@@ -36,16 +36,28 @@ func IsAdminBasicAuthorized(f server.HandlerFunc) server.HandlerFunc {
 			return
 		}
 		f(ctx, w, r, p)
-	})
+	}
+}
+
+func IsAdminTokenAuthorized(f server.HandlerFunc) server.HandlerFunc {
+	return func(ctx context.Context, w http.ResponseWriter, r *http.Request, p server.PathParams) {
+		client := connector.Get()
+		key := r.Header.Get("x-api-key")
+		if len(key) == 0 {
+			handleAuthError(w, r, &NoApiKeyProvided{})
+			return
+		}
+		if !auth.ValidateToken(client, key) {
+			handleAuthError(w, r, &TokenNotAuthorized{})
+			return
+		}
+		f(ctx, w, r, p)
+	}
 }
 
 func DevTest(ctx context.Context, w http.ResponseWriter, r *http.Request, p server.PathParams) {
-	username, password, ok := r.BasicAuth()
-	if !ok {
-		handleAuthError(w, r, &MalformedBasicAuth{})
-		return
-	}
-	fmt.Printf("%s, %s", username, password)
+	fmt.Println("test")
+	fmt.Println(r.Header.Get("x-api-key"))
 }
 
 func PostAuth(ctx context.Context, w http.ResponseWriter, r *http.Request, p server.PathParams) {
@@ -60,13 +72,7 @@ func PostAuth(ctx context.Context, w http.ResponseWriter, r *http.Request, p ser
 
 func PutAuth(ctx context.Context, w http.ResponseWriter, r *http.Request, p server.PathParams) {
 	c := connector.Get()
-	token := models.Token{}
-	err := json.NewDecoder(r.Body).Decode(&token)
-	if err != nil {
-		handleAuthError(w, r, err)
-		return
-	}
-	newToken, err := auth.RenewToken(c, token)
+	newToken, err := auth.RenewToken(c, r.Header.Get("x-api-key"))
 	if err != nil {
 		handleAuthError(w, r, err)
 		return

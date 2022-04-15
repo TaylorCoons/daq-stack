@@ -5,8 +5,8 @@ import (
 	"encoding/base64"
 	"time"
 
-	"github.com/TaylorCoons/daq-stack/src/helpers"
 	"github.com/TaylorCoons/daq-stack/src/models"
+	"github.com/TaylorCoons/daq-stack/src/utils"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -29,7 +29,7 @@ func IndexTables(client *mongo.Client) {
 		Keys:    bsonx.Doc{{Key: "createdAt", Value: bsonx.Int32(1)}},
 		Options: options.Index().SetExpireAfterSeconds(expirySeconds).SetName("expiration"),
 	}
-	_, err := collection.Indexes().CreateOne(helpers.TimeoutCtx(10), index)
+	_, err := collection.Indexes().CreateOne(utils.TimeoutCtx(10), index)
 	if err != nil {
 		panic(err)
 	}
@@ -46,36 +46,32 @@ func CreateToken(client *mongo.Client) (models.Token, error) {
 	if err != nil {
 		return models.Token{}, err
 	}
-	collection.InsertOne(helpers.TimeoutCtx(10), token)
+	collection.InsertOne(utils.TimeoutCtx(10), token)
 
 	return token, nil
 }
 
-func RenewToken(client *mongo.Client, token models.Token) (models.Token, error) {
-	if ValidateToken(client, token) {
-		return models.Token{}, &TokenNotAuthorized{}
-	}
+func RenewToken(client *mongo.Client, key string) (models.Token, error) {
 	// Delete token
 	collection := client.Database(database).Collection(collection)
-	collection.DeleteMany(helpers.TimeoutCtx(10), bson.M{"key": token.Key})
-	newToken, err := GenerateToken(tokenSize)
+	collection.DeleteOne(utils.TimeoutCtx(10), bson.M{"key": key})
+	newToken, err := CreateToken(client)
 	if err != nil {
 		return models.Token{}, err
 	}
-	collection.InsertOne(helpers.TimeoutCtx(10), newToken)
 	return newToken, nil
 }
 
-func ValidateToken(client *mongo.Client, token models.Token) bool {
+func ValidateToken(client *mongo.Client, key string) bool {
 	collection := client.Database(database).Collection(collection)
-	res := collection.FindOne(helpers.TimeoutCtx(10), bson.M{"key": token.Key}).Decode(&models.Token{})
-	return res != nil
+	err := collection.FindOne(utils.TimeoutCtx(10), bson.M{"key": key}).Decode(&models.Token{})
+	return err == nil
 }
 
 func RevokeToken(client *mongo.Client) error {
 	// TODO: Remove hashed token from DB
 	collection := client.Database(database).Collection(collection)
-	collection.DeleteMany(helpers.TimeoutCtx(10), bson.D{})
+	collection.DeleteMany(utils.TimeoutCtx(10), bson.D{})
 	return nil
 }
 
