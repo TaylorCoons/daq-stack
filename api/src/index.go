@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/TaylorCoons/daq-stack/src/connector"
+	"github.com/TaylorCoons/daq-stack/src/handlers"
 	"github.com/TaylorCoons/daq-stack/src/routes"
 	"github.com/TaylorCoons/daq-stack/src/sdk/auth"
 	server "github.com/TaylorCoons/gorouter"
@@ -37,6 +38,7 @@ func startServer() {
 
 	compiledRoutes := server.CompileRoutes(routes.Routes)
 	server := server.Server{CompiledRoutes: compiledRoutes}
+	server.Middleware = handlers.Middleware
 
 	port := 8080
 	bind := fmt.Sprintf(":%d", port)

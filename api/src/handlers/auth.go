@@ -12,10 +12,21 @@ import (
 	server "github.com/TaylorCoons/gorouter"
 )
 
+func handleAuthError(w http.ResponseWriter, r *http.Request, err error) {
+	if e, ok := (err).(*auth.NotAuthorized); ok {
+		writeError(w, r, e, http.StatusUnauthorized)
+	} else if e, ok := (err).(*MalformedBasicAuth); ok {
+		writeError(w, r, e, http.StatusUnauthorized)
+	} else {
+		panic(err)
+	}
+}
+
 func DevTest(ctx context.Context, w http.ResponseWriter, r *http.Request, p server.PathParams) {
 	username, password, ok := r.BasicAuth()
 	if !ok {
-		panic(fmt.Errorf("invalid basic auth parameter"))
+		handleAuthError(w, r, &MalformedBasicAuth{})
+		return
 	}
 	fmt.Printf("%s, %s", username, password)
 }
@@ -24,11 +35,13 @@ func PostAuth(ctx context.Context, w http.ResponseWriter, r *http.Request, p ser
 	c := connector.Get()
 	username, password, ok := r.BasicAuth()
 	if !ok {
-		panic(fmt.Errorf("invalid basic auth parameter"))
+		handleAuthError(w, r, &MalformedBasicAuth{})
+		return
 	}
 	token, err := auth.CreateToken(c, username, password)
 	if err != nil {
-		panic(err)
+		handleAuthError(w, r, err)
+		return
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(token)
@@ -38,13 +51,14 @@ func PutAuth(ctx context.Context, w http.ResponseWriter, r *http.Request, p serv
 	c := connector.Get()
 	token := models.Token{}
 	err := json.NewDecoder(r.Body).Decode(&token)
-	fmt.Println(token)
 	if err != nil {
-		panic(err)
+		handleAuthError(w, r, err)
+		return
 	}
 	newToken, err := auth.RenewToken(c, token)
 	if err != nil {
-		panic(err)
+		handleAuthError(w, r, err)
+		return
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(newToken)
@@ -54,11 +68,13 @@ func DeleteAuth(ctx context.Context, w http.ResponseWriter, r *http.Request, p s
 	c := connector.Get()
 	username, password, ok := r.BasicAuth()
 	if !ok {
-		panic(fmt.Errorf("invalid basic auth parameter"))
+		handleAuthError(w, r, &MalformedBasicAuth{})
+		return
 	}
 	err := auth.RevokeToken(c, username, password)
 	if err != nil {
-		panic(err)
+		handleAuthError(w, r, err)
+		return
 	}
 }
 
