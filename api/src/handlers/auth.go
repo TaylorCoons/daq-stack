@@ -67,7 +67,7 @@ func PostAuthLogin(ctx context.Context, w http.ResponseWriter, r *http.Request, 
 		handleAuthError(w, r, err)
 		return
 	}
-	writeJson(w, token)
+	writeJson(w, token, http.StatusCreated)
 }
 
 func PutAuthRenew(ctx context.Context, w http.ResponseWriter, r *http.Request, p server.PathParams) {
@@ -77,7 +77,7 @@ func PutAuthRenew(ctx context.Context, w http.ResponseWriter, r *http.Request, p
 		handleAuthError(w, r, err)
 		return
 	}
-	writeJson(w, newToken)
+	writeJson(w, newToken, http.StatusCreated)
 }
 
 func DeleteAuthRelease(ctx context.Context, w http.ResponseWriter, r *http.Request, p server.PathParams) {
@@ -96,8 +96,9 @@ func DeleteAuthRevoke(ctx context.Context, w http.ResponseWriter, r *http.Reques
 		handleAuthError(w, r, err)
 		return
 	}
+	writeStatus(w, http.StatusOK)
 }
 
 func GetAuth(ctx context.Context, w http.ResponseWriter, r *http.Request, p server.PathParams) {
-	writeJson(w, auth.SupportedAuthTypes())
+	writeJson(w, auth.SupportedAuthTypes(), http.StatusOK)
 }

@@ -8,9 +8,14 @@ import (
 	"github.com/TaylorCoons/daq-stack/src/models"
 )
 
-func writeJson(w http.ResponseWriter, v interface{}) {
+func writeJson(w http.ResponseWriter, v interface{}, status int) {
+	w.WriteHeader(status)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(v)
+}
+
+func writeStatus(w http.ResponseWriter, status int) {
+	w.WriteHeader(status)
 }
 
 func writeError(w http.ResponseWriter, r *http.Request, err error, status int) {
@@ -22,5 +27,5 @@ func writeError(w http.ResponseWriter, r *http.Request, err error, status int) {
 		Message:   err.Error(),
 		Path:      r.URL.Path,
 	}
-	writeJson(w, httpErr)
+	writeJson(w, httpErr, http.StatusCreated)
 }
